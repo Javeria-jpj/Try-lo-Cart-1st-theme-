@@ -1,0 +1,15 @@
+{
+    "sections": {
+        "main": {
+            "type": "collection-basics-karandi",
+            "settings": {
+                "title": "Basics Karandi",
+                "show_description": true,
+                "products_per_page": 16
+            }
+        }
+    },
+    "order": [
+        "main"
+    ]
+}

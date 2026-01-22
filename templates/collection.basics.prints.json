@@ -1,0 +1,15 @@
+{
+    "sections": {
+        "main": {
+            "type": "collection-basics-prints",
+            "settings": {
+                "title": "Basics Prints",
+                "show_description": true,
+                "products_per_page": 16
+            }
+        }
+    },
+    "order": [
+        "main"
+    ]
+}

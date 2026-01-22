@@ -1,0 +1,134 @@
+
+<script src="{{ 'facets.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+<div class="page-width">
+  <div class="collection-sale-header">
+    <h1>{{ section.settings.title | default: collection.title }}</h1>
+    {% if section.settings.show_description and collection.description != blank %}
+      <div class="rte">
+        {{ collection.description }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="collection-sale-container">
+    <aside class="collection-filters">
+      <facets-form-component section-id="{{ section.id }}">
+        <form id="FacetFiltersForm" class="facets__form">
+          {% if collection.filters != empty %}
+            <div class="facets-wrapper">
+              {% for filter in collection.filters %}
+                {% case filter.type %}
+                  {% when 'price_range' %}
+                    {% render 'price-filter', filter: filter, filter_style: 'vertical' %}
+                  {% else %}
+                    {% assign active_value_count = filter.active_values | size %}
+                    {% render 'list-filter', filter: filter, filter_style: 'vertical', active_value_count: active_value_count, sectionId: section.id %}
+                {% endcase %}
+              {% endfor %}
+            </div>
+            <noscript>
+              <button type="submit" class="button button--small">{{ 'actions.apply' | t }}</button>
+            </noscript>
+          {% endif %}
+        </form>
+      </facets-form-component>
+    </aside>
+
+    <div class="collection-sale-grid" id="ProductGridContainer">
+      {% paginate collection.products by section.settings.products_per_page %}
+        <ul class="grid grid--2-col grid--3-col-tablet grid--4-col-desktop" id="product-grid" data-id="{{ section.id }}" class="grid product-grid">
+          {% for product in collection.products %}
+            <li class="grid__item">
+               <div class="product-item">
+                 <a href="{{ product.url }}">
+                   {% if product.featured_media %}
+                     <img src="{{ product.featured_media | image_url: width: 400 }}" 
+                          alt="{{ product.featured_media.alt | escape }}" 
+                          loading="lazy" 
+                          width="{{ product.featured_media.width }}" 
+                          height="{{ product.featured_media.height }}"
+                          style="width: 100%; height: auto;">
+                   {% endif %}
+                   <h3>{{ product.title }}</h3>
+                   <div>{{ product.price | money }}</div>
+                 </a>
+               </div>
+            </li>
+          {% else %}
+             <li class="grid__item">
+               <p>No products found in this collection.</p>
+             </li>
+          {% endfor %}
+        </ul>
+        {% if paginate.pages > 1 %}
+          {{ paginate | default_pagination }}
+        {% endif %}
+      {% endpaginate %}
+    </div>
+  </div>
+</div>
+
+{% style %}
+  .collection-sale-container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 30px;
+    margin-top: 30px;
+  }
+  
+  .collection-filters {
+    display: block;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .collection-sale-container {
+      grid-template-columns: 1fr;
+    }
+    .collection-filters {
+      display: none; 
+    }
+  }
+
+  .facets-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Basics Rawsilk",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Basics Rawsilk"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show collection description",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "min": 8,
+      "max": 24,
+      "step": 4,
+      "default": 16,
+      "label": "Products per page"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Basics Rawsilk"
+    }
+  ]
+}
+{% endschema %}

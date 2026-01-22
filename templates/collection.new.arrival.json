@@ -1,0 +1,19 @@
+{
+    "sections": {
+        "main": {
+            "type": "collection-new-arrival",
+            "settings": {
+                "title": "New Arrivals",
+                "show_description": true,
+                "products_per_page": 16,
+                "show_filtering": true,
+                "columns_on_desktop": 3,
+                "columns_on_tablet": 2,
+                "columns_on_mobile": 1
+            }
+        }
+    },
+    "order": [
+        "main"
+    ]
+}

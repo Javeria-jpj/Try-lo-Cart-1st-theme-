@@ -1,0 +1,15 @@
+{
+    "sections": {
+        "main": {
+            "type": "collection-afsanah-lawn",
+            "settings": {
+                "title": "Afsanah Lawn",
+                "show_description": true,
+                "products_per_page": 16
+            }
+        }
+    },
+    "order": [
+        "main"
+    ]
+}

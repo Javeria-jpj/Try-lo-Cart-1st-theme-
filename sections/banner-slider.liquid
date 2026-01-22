@@ -1,0 +1,297 @@
+{% schema %}
+{
+  "name": "Banner Slider",
+  "settings": [
+    {
+      "type": "range",
+      "id": "autoplay_interval",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Autoplay Interval",
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "mobile_alignment_global",
+      "label": "Global/Fallback Mobile Image Alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center",
+      "info": "Controls alignment for default images or slides without specific settings."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Desktop Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "mobile_image",
+          "label": "Mobile Image (Optional)",
+          "info": "Upload a portrait image for mobile to ensure perfect framing."
+        },
+        {
+          "type": "select",
+          "id": "mobile_alignment",
+          "label": "Mobile Image Alignment (Desktop Image)",
+          "options": [
+            { "value": "left", "label": "Left" },
+            { "value": "center", "label": "Center" },
+            { "value": "right", "label": "Right" }
+          ],
+          "default": "center",
+          "info": "Only used if no Mobile Image is uploaded."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Banner Slider"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+  .banner-slider-section {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  .banner-slider-container {
+    display: flex;
+    transition: transform 0.8s ease-in-out;
+    width: 100%;
+  }
+  .banner-slide {
+    width: 100%;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .banner-image-desktop {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+
+  .banner-image-mobile {
+    display: none;
+  }
+
+  /* Keep fallback img styling for older loops */
+  .banner-slide > img:not(.banner-image-mobile):not(.banner-image-desktop) {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+
+  @media screen and (max-width: 768px) {
+    .banner-slider-section,
+    .banner-slider-container,
+    .banner-slide {
+      height: 90vh;
+      min-height: 500px;
+    }
+
+    .banner-image-desktop {
+      display: none;
+    }
+
+    .banner-image-mobile {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      object-position: center !important;
+    }
+
+    /* Fallback logic for desktop image on mobile */
+    .banner-slide > img.banner-image-desktop.mobile-fallback {
+      display: block !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      /* Alignment handled inline */
+    }
+
+    .banner-slide > img:not(.banner-image-mobile):not(.banner-image-desktop) {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+  }
+
+  .banner-pagination {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+  .banner-dot {
+    width: 8px;
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .banner-dot.active {
+    background-color: #000;
+  }
+</style>
+
+<div class="banner-slider-section" id="BannerSlider-{{ section.id }}">
+  <div class="banner-slider-container" id="SliderContainer-{{ section.id }}">
+    {% if section.blocks.size > 0 %}
+      {% for block in section.blocks %}
+        <div class="banner-slide" {{ block.shopify_attributes }}>
+          {% if block.settings.mobile_image != blank %}
+            <!-- Separate Mobile Image -->
+            {{
+              block.settings.mobile_image
+              | image_url: width: 800
+              | image_tag: loading: 'lazy', class: 'banner-image-mobile'
+            }}
+            <!-- Desktop Image (Hidden on Mobile) -->
+            {{
+              block.settings.image
+              | image_url: width: 1920
+              | image_tag: loading: 'lazy', class: 'banner-image-desktop'
+            }}
+          {% elsif block.settings.image != blank %}
+            <!-- Single Image with Alignment Fallback -->
+            {{
+              block.settings.image
+              | image_url: width: 1920
+              | image_tag:
+                loading: 'lazy',
+                class: 'banner-image-desktop mobile-fallback',
+                style: 'object-position: [ALIGNMENT] center !important;'
+              | replace: '[ALIGNMENT]', block.settings.mobile_alignment
+            }}
+          {% else %}
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      {% comment %} Fallback for old implementation {% endcomment %}
+      {% for i in (1..10) %}
+        <div class="banner-slide">
+          <img
+            src="{{ 'banner-' | append: i | append: '.jpg' | asset_url }}"
+            alt="Banner {{ i }}"
+            loading="{% if i == 1 %}eager{% else %}lazy{% endif %}"
+            style="object-position: {{ section.settings.mobile_alignment_global }} center !important;"
+            width=""
+            height=""
+          >
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="banner-pagination" id="Pagination-{{ section.id }}">
+    {% if section.blocks.size > 0 %}
+      {% for block in section.blocks %}
+        <div class="banner-dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.index0 }}"></div>
+      {% endfor %}
+    {% else %}
+      {% for i in (1..10) %}
+        <div class="banner-dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.index0 }}"></div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sectionId = "{{ section.id }}";
+    const container = document.getElementById(`SliderContainer-${sectionId}`);
+    const dots = document.querySelectorAll(`#Pagination-${sectionId} .banner-dot`);
+    
+    {% if section.blocks.size > 0 %}
+      const totalSlides = {{ section.blocks.size }};
+    {% else %}
+      const totalSlides = 10;
+    {% endif %}
+
+    if (totalSlides === 0) return; // Safety
+
+    // Adjust container width based on slide count
+    container.style.width = `${totalSlides * 100}%`;
+    const slides = container.querySelectorAll('.banner-slide');
+    slides.forEach(slide => {
+      slide.style.width = `${100 / totalSlides}%`;
+    });
+
+    let currentIndex = 0;
+    let intervalId;
+    const intervalTime = {{ section.settings.autoplay_interval | times: 1000 }};
+
+    function updateSlider() {
+      container.style.transform = `translateX(-${currentIndex * (100 / totalSlides)}%)`;
+      dots.forEach((dot, index) => {
+        if (index === currentIndex) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function nextSlide() {
+      let nextIndex = currentIndex + 1;
+
+      // Reset to start if at end
+      if (nextIndex >= totalSlides) {
+        nextIndex = 0;
+      }
+
+      currentIndex = nextIndex;
+      updateSlider();
+    }
+
+    function startAutoplay() {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(nextSlide, intervalTime);
+    }
+
+    function stopAutoplay() {
+      if (intervalId) clearInterval(intervalId);
+    }
+    
+    dots.forEach(dot => {
+      dot.addEventListener('click', function() {
+        stopAutoplay();
+        const targetIndex = parseInt(this.getAttribute('data-index'));
+        
+        currentIndex = targetIndex;
+        updateSlider();
+        
+        startAutoplay();
+      });
+    });
+
+    startAutoplay();
+  });
+</script>

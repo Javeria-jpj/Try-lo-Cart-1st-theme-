@@ -1,0 +1,15 @@
+{
+    "sections": {
+        "main": {
+            "type": "collection-the-print-edit",
+            "settings": {
+                "title": "The Print Edit",
+                "show_description": true,
+                "products_per_page": 16
+            }
+        }
+    },
+    "order": [
+        "main"
+    ]
+}
